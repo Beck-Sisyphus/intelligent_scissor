@@ -334,7 +334,7 @@ bool minimum_cost_path_dijkstra(Point* seed, Point* dest, void* return_dist, voi
 //        active_nodes.pop(); // remove the top element
 
         cout << "number of nodes: " << active_nodes.GetNumNodes() << endl;
-        current->Print();
+//        current->Print();
 
         current->state = Pixel_Node::EXPANDED;
 
@@ -344,7 +344,7 @@ bool minimum_cost_path_dijkstra(Point* seed, Point* dest, void* return_dist, voi
             return true;
         }
 
-        int i, j;
+        int i, j, k;
         int index;
         // Expand its neighbor nodes
         for ( i = 0; i < 3; ++i) {
@@ -364,13 +364,16 @@ bool minimum_cost_path_dijkstra(Point* seed, Point* dest, void* return_dist, voi
                 {
                     if (current->total_cost + current->link_cost[i * 3 + j] < neighbor->total_cost)
                     {
-                        neighbor->prevNode   = current;
-                        neighbor->total_cost = current->total_cost + current->link_cost[i * 3 + j];
+//                        cout << "decreased key from and to" << endl;
+//                        neighbor->Print();
+
                         Pixel_Node new_node(neighbor->row, neighbor->col);
-                        new_node.prevNode   = current;
+                        new_node = *neighbor; // Get a copy of the original node
                         new_node.total_cost = current->total_cost + current->link_cost[i * 3 + j];
-//                        active_nodes.push(*neighbor);
+                        new_node.prevNode   = current;
                         active_nodes.DecreaseKey(neighbor, new_node);
+
+//                        neighbor->Print();
                     }
                 }
 
