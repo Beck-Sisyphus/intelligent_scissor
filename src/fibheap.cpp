@@ -62,8 +62,8 @@
 
 FibHeapNode::FibHeapNode()
 {
-     Left = Right = Parent = Child = NULL;
-     Degree = Mark = NegInfinityFlag = 0;
+    Left = Right = Parent = Child = NULL;
+    Degree = Mark = NegInfinityFlag = 0;
 }
 
 //=========================================================
@@ -88,9 +88,9 @@ FibHeapNode::~FibHeapNode()
 // set).
 //=========================================================
 
-void FibHeapNode::FHN_Assign(FibHeapNode& RHS)
+void FibHeapNode::FHN_Assign(FibHeapNode &RHS)
 {
-     NegInfinityFlag = RHS.NegInfinityFlag;
+    NegInfinityFlag = RHS.NegInfinityFlag;
 }
 
 //=========================================================
@@ -114,11 +114,11 @@ void FibHeapNode::FHN_Assign(FibHeapNode& RHS)
 //         if non-zero X returned, then return X>0?1:0    
 //=========================================================
 
-int  FibHeapNode::FHN_Cmp(FibHeapNode& RHS)
+int FibHeapNode::FHN_Cmp(FibHeapNode &RHS)
 {
-     if (NegInfinityFlag)
-	 return RHS.NegInfinityFlag ? 0 : -1;
-     return RHS.NegInfinityFlag ? 1 : 0; 
+    if (NegInfinityFlag)
+        return RHS.NegInfinityFlag ? 0 : -1;
+    return RHS.NegInfinityFlag ? 1 : 0;
 }
 
 //========================================================================
@@ -128,27 +128,27 @@ int  FibHeapNode::FHN_Cmp(FibHeapNode& RHS)
 // Also, these functions exemplify what a derived class should do.
 //========================================================================
 
-void FibHeapNode::operator =(FibHeapNode& RHS)
+void FibHeapNode::operator=(FibHeapNode &RHS)
 {
-     FHN_Assign(RHS);
-     // Key assignment goes here in derived classes
+    FHN_Assign(RHS);
+    // Key assignment goes here in derived classes
 }
 
-int  FibHeapNode::operator ==(FibHeapNode& RHS)
+int FibHeapNode::operator==(FibHeapNode &RHS)
 {
-     if (FHN_Cmp(RHS)) return 0;
-     // Key compare goes here in derived classes
-     return 1;
+    if (FHN_Cmp(RHS)) return 0;
+    // Key compare goes here in derived classes
+    return 1;
 }
 
-int  FibHeapNode::operator <(FibHeapNode& RHS)
+int FibHeapNode::operator<(FibHeapNode &RHS)
 {
-int X;
+    int X;
 
-     if ((X=FHN_Cmp(RHS)) != 0)
-	  return X < 0 ? 1 : 0;
-     // Key compare goes here in derived classes
-     return 0;
+    if ((X = FHN_Cmp(RHS)) != 0)
+        return X < 0 ? 1 : 0;
+    // Key compare goes here in derived classes
+    return 0;
 }
 
 //=========================================================
@@ -157,8 +157,8 @@ int X;
 
 void FibHeapNode::Print()
 {
-     if (NegInfinityFlag)
-	 cout << "-inf.";
+    if (NegInfinityFlag)
+        cout << "-inf.";
 }
 
 //***************************************************************************
@@ -169,9 +169,9 @@ void FibHeapNode::Print()
 
 FibHeap::FibHeap()
 {
-     MinRoot = NULL;
-     NumNodes = NumTrees = NumMarkedNodes = 0;
-     ClearHeapOwnership();
+    MinRoot = NULL;
+    NumNodes = NumTrees = NumMarkedNodes = 0;
+    ClearHeapOwnership();
 }
 
 //===========================================================================
@@ -180,16 +180,14 @@ FibHeap::FibHeap()
 
 FibHeap::~FibHeap()
 {
-FibHeapNode *Temp;
+    FibHeapNode *Temp;
 
-     if (GetHeapOwnership())
-     {
-         while (MinRoot != NULL)
-         {
-             Temp = ExtractMin();
-             delete Temp;
-	 }
-     }
+    if (GetHeapOwnership()) {
+        while (MinRoot != NULL) {
+            Temp = ExtractMin();
+            delete Temp;
+        }
+    }
 }
 
 //===========================================================================
@@ -206,38 +204,37 @@ FibHeapNode *Temp;
 
 void FibHeap::Insert(FibHeapNode *NewNode)
 {
-     if (NewNode == NULL) return;
+    if (NewNode == NULL) return;
 
 // If the heap is currently empty, then new node becomes singleton
 // circular root list
- 
-     if (MinRoot == NULL)
-	 MinRoot = NewNode->Left = NewNode->Right = NewNode;
 
-     else
-     {
+    if (MinRoot == NULL)
+        MinRoot = NewNode->Left = NewNode->Right = NewNode;
+
+    else {
 // Pointers from NewNode set to insert between MinRoot and MinRoot->Right
 
-         NewNode->Right = MinRoot->Right;
-	 NewNode->Left = MinRoot;
+        NewNode->Right = MinRoot->Right;
+        NewNode->Left = MinRoot;
 
 // Set Pointers to NewNode  
 
-	 NewNode->Left->Right = NewNode;
-         NewNode->Right->Left = NewNode;
+        NewNode->Left->Right = NewNode;
+        NewNode->Right->Left = NewNode;
 
 // The new node becomes new MinRoot if it is less than current MinRoot
 
-         if (*NewNode < *MinRoot)
-	     MinRoot = NewNode;
-     }
+        if (*NewNode < *MinRoot)
+            MinRoot = NewNode;
+    }
 
 // We have one more node in the heap, and it is a tree on the root list
 
-     NumNodes++;
+    NumNodes++;
 
-     NumTrees++;
-     NewNode->Parent = NULL;
+    NumTrees++;
+    NewNode->Parent = NULL;
 }
 
 //===========================================================================
@@ -246,50 +243,50 @@ void FibHeap::Insert(FibHeapNode *NewNode)
 
 void FibHeap::Union(FibHeap *OtherHeap)
 {
-FibHeapNode *Min1, *Min2, *Next1, *Next2;
+    FibHeapNode *Min1, *Min2, *Next1, *Next2;
 
-     if (OtherHeap == NULL || OtherHeap->MinRoot == NULL) return;
+    if (OtherHeap == NULL || OtherHeap->MinRoot == NULL) return;
 
 // We join the two circular lists by cutting each list between its
 // min node and the node after the min.  This code just pulls those
 // nodes into temporary variables so we don't get lost as changes
 // are made.
 
-     Min1 = MinRoot;
-     Min2 = OtherHeap->MinRoot;
-     Next1 = Min1->Right;
-     Next2 = Min2->Right;
+    Min1 = MinRoot;
+    Min2 = OtherHeap->MinRoot;
+    Next1 = Min1->Right;
+    Next2 = Min2->Right;
 
 // To join the two circles, we join the minimum nodes to the next
 // nodes on the opposite chains.  Conceptually, it looks like the way
 // two bubbles join to form one larger bubble.  They meet at one point
 // of contact, then expand out to make the bigger circle.
- 
-     Min1->Right = Next2;
-     Next2->Left = Min1;
-     Min2->Right = Next1;
-     Next1->Left = Min2;
+
+    Min1->Right = Next2;
+    Next2->Left = Min1;
+    Min2->Right = Next1;
+    Next1->Left = Min2;
 
 // Choose the new minimum for the heap
- 
-     if (*Min2 < *Min1)
-         MinRoot = Min2;
+
+    if (*Min2 < *Min1)
+        MinRoot = Min2;
 
 // Set the amortized analysis statistics and size of the new heap
-                   
-     NumNodes += OtherHeap->NumNodes;
-     NumMarkedNodes += OtherHeap->NumMarkedNodes;
-     NumTrees += OtherHeap->NumTrees;
+
+    NumNodes += OtherHeap->NumNodes;
+    NumMarkedNodes += OtherHeap->NumMarkedNodes;
+    NumTrees += OtherHeap->NumTrees;
 
 // Complete the union by setting the other heap to emptiness
 // then destroying it
 
-     OtherHeap->MinRoot  = NULL;
-     OtherHeap->NumNodes =
-     OtherHeap->NumTrees =
-     OtherHeap->NumMarkedNodes = 0;
+    OtherHeap->MinRoot = NULL;
+    OtherHeap->NumNodes =
+    OtherHeap->NumTrees =
+    OtherHeap->NumMarkedNodes = 0;
 
-     delete OtherHeap;
+    delete OtherHeap;
 }
 
 //===========================================================================
@@ -298,7 +295,7 @@ FibHeapNode *Min1, *Min2, *Next1, *Next2;
 
 FibHeapNode *FibHeap::Minimum()
 {
-     return MinRoot;
+    return MinRoot;
 }
 
 //===========================================================================
@@ -307,74 +304,73 @@ FibHeapNode *FibHeap::Minimum()
 
 FibHeapNode *FibHeap::ExtractMin()
 {
-FibHeapNode *Result;
-FibHeap *ChildHeap = NULL;
+    FibHeapNode *Result;
+    FibHeap *ChildHeap = NULL;
 
 // Remove minimum node and set MinRoot to next node
 
-     if ((Result = Minimum()) == NULL)
-          return NULL;
+    if ((Result = Minimum()) == NULL)
+        return NULL;
 
-     MinRoot = Result->Right;
-     Result->Right->Left = Result->Left;
-     Result->Left->Right = Result->Right;
-     Result->Left = Result->Right = NULL;
+    if ((MinRoot = Result->Right) == NULL) { cout << "min root right is null" << endl; }
+    Result->Right->Left = Result->Left;
+    Result->Left->Right = Result->Right;
+    Result->Left = Result->Right = NULL;
 
-     NumNodes --;
-     if (Result->Mark)
-     {
-	 NumMarkedNodes --;
-         Result->Mark = 0;
-     }
-     Result->Degree = 0;
+    NumNodes--;
+    if (Result->Mark) {
+        NumMarkedNodes--;
+        Result->Mark = 0;
+    }
+    Result->Degree = 0;
 
 // Attach child list of Minimum node to the root list of the heap
 // If there is no child list, then do no work
 
-     if (Result->Child == NULL)
-     {
-	 if (MinRoot == Result)
-	     MinRoot = NULL;
-     }
+    if (Result->Child == NULL) {
+        if (MinRoot == Result)
+            MinRoot = NULL;
+    }
 
 // If MinRoot==Result then there was only one root tree, so the
 // root list is simply the child list of that node (which is
 // NULL if this is the last node in the list)
 
-     else if (MinRoot == Result)
-         MinRoot = Result->Child;
+    else if (MinRoot == Result)
+        MinRoot = Result->Child;
 
 // If MinRoot is different, then the child list is pushed into a
 // new temporary heap, which is then merged by Union() onto the
 // root list of this heap.
 
-     else 
-     {
-         ChildHeap = new FibHeap();
-         ChildHeap->MinRoot = Result->Child;
-     }
+    else {
+        ChildHeap = new FibHeap();
+        ChildHeap->MinRoot = Result->Child;
+    }
 
 // Complete the disassociation of the Result node from the heap
 
-     if (Result->Child != NULL)
-	 Result->Child->Parent = NULL;
-     Result->Child = Result->Parent = NULL;
+    if (Result->Child != NULL)
+        Result->Child->Parent = NULL;
+    Result->Child = Result->Parent = NULL;
 
 // If there was a child list, then we now merge it with the
 //	rest of the root list
 
-     if (ChildHeap)
-         Union(ChildHeap);
+
+    if (ChildHeap)
+        Union(ChildHeap);
 
 // Consolidate heap to find new minimum and do reorganize work
 
-     if (MinRoot != NULL)
-         _Consolidate();
+    if (MinRoot != NULL)
+        _Consolidate();
 
+//    cout << "consolidate works " << endl;
 // Return the minimum node, which is now disassociated with the heap
 // It has Left, Right, Parent, Child, Mark and Degree cleared.
 
-     return Result;
+    return Result;
 }
 
 //===========================================================================
@@ -384,26 +380,25 @@ FibHeap *ChildHeap = NULL;
 // therefore the number of ancestor parents, is bounded by O(lg n).
 //===========================================================================
 
-int  FibHeap::DecreaseKey(FibHeapNode *theNode, FibHeapNode& NewKey)
+int FibHeap::DecreaseKey(FibHeapNode *theNode, FibHeapNode &NewKey)
 {
-FibHeapNode *theParent;
+    FibHeapNode *theParent;
 
-     if (theNode==NULL || *theNode < NewKey)
-         return NOTOK;
+    if (theNode == NULL || *theNode < NewKey)
+        return NOTOK;
 
-     *theNode = NewKey;
+    *theNode = NewKey;
 
-     theParent = theNode->Parent;
-     if (theParent != NULL && *theNode < *theParent)
-     {
-         _Cut(theNode, theParent);
-         _CascadingCut(theParent);
-     }
+    theParent = theNode->Parent;
+    if (theParent != NULL && *theNode < *theParent) {
+        _Cut(theNode, theParent);
+        _CascadingCut(theParent);
+    }
 
-     if (*theNode < *MinRoot)
-         MinRoot = theNode;
+    if (*theNode < *MinRoot)
+        MinRoot = theNode;
 
-     return OK;
+    return OK;
 }
 
 //===========================================================================
@@ -414,28 +409,27 @@ FibHeapNode *theParent;
 // will be reusing the node.
 //===========================================================================
 
-int  FibHeap::Delete(FibHeapNode *theNode)
+int FibHeap::Delete(FibHeapNode *theNode)
 {
-FibHeapNode Temp;
-int Result;
+    FibHeapNode Temp;
+    int Result;
 
-     if (theNode == NULL) return NOTOK;
+    if (theNode == NULL) return NOTOK;
 
-     Temp.NegInfinityFlag = 1;
-     Result = DecreaseKey(theNode, Temp);
+    Temp.NegInfinityFlag = 1;
+    Result = DecreaseKey(theNode, Temp);
 
-     if (Result == OK)
-         if (ExtractMin() == NULL)
-             Result = NOTOK;
+    if (Result == OK)
+        if (ExtractMin() == NULL)
+            Result = NOTOK;
 
-     if (Result == OK)
-     {
-         if (GetHeapOwnership())
-	      delete theNode;
-	 else theNode->NegInfinityFlag = 0;
-     }
-         
-     return Result;
+    if (Result == OK) {
+        if (GetHeapOwnership())
+            delete theNode;
+        else theNode->NegInfinityFlag = 0;
+    }
+
+    return Result;
 }
 
 //========================================================================
@@ -448,64 +442,62 @@ int Result;
 
 void FibHeap::Print(FibHeapNode *Tree, FibHeapNode *theParent)
 {
-FibHeapNode* Temp = NULL;
+    FibHeapNode *Temp = NULL;
 
-     if (Tree == NULL) Tree = MinRoot;
+    if (Tree == NULL) Tree = MinRoot;
 
-     Temp = Tree;
-     do {
-		if (Temp->Left == NULL)
-		    cout << "(Left is NULL)";
-		Temp->Print();
-		if (Temp->Parent != theParent)
-		    cout << "(Parent is incorrect)";
-		if (Temp->Right == NULL)
-		     cout << "(Right is NULL)";
-		else if (Temp->Right->Left != Temp)
-			 cout << "(Error in left link left) ->";
-		else cout << " <-> ";
+    Temp = Tree;
+    do {
+        if (Temp->Left == NULL)
+            cout << "(Left is NULL)";
+        Temp->Print();
+        if (Temp->Parent != theParent)
+            cout << "(Parent is incorrect)";
+        if (Temp->Right == NULL)
+            cout << "(Right is NULL)";
+        else if (Temp->Right->Left != Temp)
+            cout << "(Error in left link left) ->";
+        else cout << " <-> ";
 
-		Temp = Temp->Right;
+        Temp = Temp->Right;
 
-		if (kbhit() && getch() == 27)
-		{
-			cout << "Hit a key to resume or ESC to break\n";
-			if (getch() == 27)
+        if (kbhit() && getch() == 27) {
+            cout << "Hit a key to resume or ESC to break\n";
+            if (getch() == 27)
                 break;
-		}
-     } while (Temp != NULL && Temp != Tree);
-     cout << '\n';
+        }
+    } while (Temp != NULL && Temp != Tree);
+    cout << '\n';
 
-     Temp = Tree;
-     do {
-	cout << "Children of ";
-	Temp->Print();
-	cout << ": ";
-	if (Temp->Child == NULL)
-	     cout << "NONE\n";
+    Temp = Tree;
+    do {
+        cout << "Children of ";
+        Temp->Print();
+        cout << ": ";
+        if (Temp->Child == NULL)
+            cout << "NONE\n";
         else Print(Temp->Child, Temp);
-	Temp = Temp->Right;
-     } while (Temp!=NULL && Temp != Tree);
+        Temp = Temp->Right;
+    } while (Temp != NULL && Temp != Tree);
 
-     if (theParent == NULL)
-     {
-     char ch;
+    if (theParent == NULL) {
+        char ch;
 
-	 cout << "Done Printing.  Hit a key.\n";
-         cin >> ch;
-     }
+        cout << "Done Printing.  Hit a key.\n";
+        cin >> ch;
+    }
 }
 
 //===========================================================================
 //===========================================================================
 
-void FibHeap::_Exchange(FibHeapNode*& N1, FibHeapNode*& N2)
+void FibHeap::_Exchange(FibHeapNode *&N1, FibHeapNode *&N2)
 {
-FibHeapNode *Temp;
+    FibHeapNode *Temp;
 
-     Temp = N1;
-     N1 = N2;
-     N2 = Temp;
+    Temp = N1;
+    N1 = N2;
+    N2 = Temp;
 }
 
 //===========================================================================
@@ -530,15 +522,15 @@ FibHeapNode *Temp;
 
 void FibHeap::_Consolidate()
 {
-FibHeapNode *x, *y, *w;
-FibHeapNode *A[1+8*sizeof(long)]; // 1+lg(n)
-int  I=0, Dn = 1+8*sizeof(long);
-short d;
+    FibHeapNode *x, *y, *w;
+    FibHeapNode *A[1 + 8 * sizeof(long)]; // 1+lg(n)
+    int I = 0, Dn = 1 + 8 * sizeof(long);
+    short d;
 
 // Initialize the consolidation detection array
 
-     for (I=0; I < Dn; I++)
-          A[I] = NULL;
+    for (I = 0; I < Dn; I++)
+        A[I] = NULL;
 
 // We need to loop through all elements on root list.
 // When a collision of degree is found, the two trees
@@ -549,46 +541,46 @@ short d;
 // because all root trees are subject to becoming a
 // child during the consolidation).
 
-     MinRoot->Left->Right = NULL;
-     MinRoot->Left = NULL;
-     w = MinRoot;
+    MinRoot->Left->Right = NULL;
+    MinRoot->Left = NULL;
+    w = MinRoot;
 
-     do {
+    do {
 //cout << "Top of Consolidate's loop\n";
 //Print(w);
 
-	x = w;
+        x = w;
         d = x->Degree;
         w = w->Right;
 
 // We need another loop here because the consolidated result
 // may collide with another large tree on the root list.
 
-        while (A[d] != NULL)
-        {
-             y = A[d];
-	     if (*y < *x)
-		 _Exchange(x, y);
-             if (w == y) w = y->Right;
-             _Link(y, x);
-             A[d] = NULL;
-             d++;
-//cout << "After a round of Linking\n";
-//Print(x);
-	}
-	A[d] = x;
 
-     } while (w != NULL);
+        while (A[d] != NULL) {
+            y = A[d];
+            if (*y < *x)
+                _Exchange(x, y);
+            if (w == y) w = y->Right;
+            _Link(y, x);
+            A[d] = NULL;
+            d++;
+            //cout << "After a round of Linking\n";
+//            Print(x);
+        }
+        A[d] = x;
+
+    } while (w != NULL);
 
 // Now we rebuild the root list, find the new minimum,
 // set all root list nodes' parent pointers to NULL and
 // count the number of subtrees.
 
-     MinRoot = NULL;
-     NumTrees = 0;
-     for (I = 0; I < Dn; I++)
-          if (A[I] != NULL)
-              _AddToRootList(A[I]);
+    MinRoot = NULL;
+    NumTrees = 0;
+    for (I = 0; I < Dn; I++)
+        if (A[I] != NULL)
+            _AddToRootList(A[I]);
 }
 
 //===========================================================================
@@ -599,40 +591,39 @@ void FibHeap::_Link(FibHeapNode *y, FibHeapNode *x)
 {
 // Remove node y from root list
 
-     if (y->Right != NULL)
-	 y->Right->Left = y->Left;
-     if (y->Left != NULL)
-         y->Left->Right = y->Right;
-     NumTrees--;
+    if (y->Right != NULL)
+        y->Right->Left = y->Left;
+    if (y->Left != NULL)
+        y->Left->Right = y->Right;
+    NumTrees--;
 
 // Make node y a singleton circular list with a parent of x
 
-     y->Left = y->Right = y;
-     y->Parent = x;
+    y->Left = y->Right = y;
+    y->Parent = x;
 
 // If node x has no children, then list y is its new child list
 
-     if (x->Child == NULL)
-	 x->Child = y;
+    if (x->Child == NULL)
+        x->Child = y;
 
 // Otherwise, node y must be added to node x's child list
 
-     else
-     {
-         y->Left = x->Child;
-         y->Right = x->Child->Right;
-         x->Child->Right = y;
-         y->Right->Left = y;
-     }
+    else {
+        y->Left = x->Child;
+        y->Right = x->Child->Right;
+        x->Child->Right = y;
+        y->Right->Left = y;
+    }
 
 // Increase the degree of node x because it's now a bigger tree
 
-     x->Degree ++;
+    x->Degree++;
 
 // Node y has just been made a child, so clear its mark
 
-     if (y->Mark) NumMarkedNodes--;
-     y->Mark = 0;
+    if (y->Mark) NumMarkedNodes--;
+    y->Mark = 0;
 }
 
 //===========================================================================
@@ -640,11 +631,11 @@ void FibHeap::_Link(FibHeapNode *y, FibHeapNode *x)
 
 void FibHeap::_AddToRootList(FibHeapNode *x)
 {
-     if (x->Mark) NumMarkedNodes --;
-     x->Mark = 0;
+    if (x->Mark) NumMarkedNodes--;
+    x->Mark = 0;
 
-     NumNodes--;
-     Insert(x);
+    NumNodes--;
+    Insert(x);
 }
 
 //===========================================================================
@@ -653,17 +644,17 @@ void FibHeap::_AddToRootList(FibHeapNode *x)
 
 void FibHeap::_Cut(FibHeapNode *x, FibHeapNode *y)
 {
-     if (y->Child == x)
-         y->Child = x->Right;
-     if (y->Child == x)
-	 y->Child = NULL;
+    if (y->Child == x)
+        y->Child = x->Right;
+    if (y->Child == x)
+        y->Child = NULL;
 
-     y->Degree --;
+    y->Degree--;
 
-     x->Left->Right = x->Right;
-     x->Right->Left = x->Left;
+    x->Left->Right = x->Right;
+    x->Right->Left = x->Left;
 
-     _AddToRootList(x);
+    _AddToRootList(x);
 }
 
 //===========================================================================
@@ -678,22 +669,18 @@ void FibHeap::_Cut(FibHeapNode *x, FibHeapNode *y)
 
 void FibHeap::_CascadingCut(FibHeapNode *y)
 {
-FibHeapNode *z = y->Parent;
+    FibHeapNode *z = y->Parent;
 
-     while (z != NULL)
-     {
-         if (y->Mark == 0)
-         {
-             y->Mark = 1;
-             NumMarkedNodes++;
-             z = NULL;
-         }
-         else
-         {
-             _Cut(y, z);
-             y = z;
-	     z = y->Parent;
-         }
-     }
+    while (z != NULL) {
+        if (y->Mark == 0) {
+            y->Mark = 1;
+            NumMarkedNodes++;
+            z = NULL;
+        } else {
+            _Cut(y, z);
+            y = z;
+            z = y->Parent;
+        }
+    }
 }
 

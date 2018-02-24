@@ -4,22 +4,29 @@
 
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/opencv.hpp"
-#include <stdio.h>
+#include <cstdio>
 #include <iostream>
-#include <queue>
+//#include <queue>
 #include <vector>
 #include "scissor.h"
+//#include "fibheap.h"
+#include "boost/heap/fibonacci_heap.hpp"
+
+#define DEBUG
+
+//#define DEBUG_NODE_VECTOR
+
+//#define DEBUG_DIJKSTRA
+
+//#define COST_GRAPH
 
 using namespace cv;
 using namespace std;
 
 String image_directory = "../image/avatar.jpg";
 String cost_graph_directory = "../image/avatar_cost_graph.jpg";
+boost::heap::fibonacci_heap<int> heap;
 
-
-#define DEBUG
-
-//#define COST_GRAPH
 
 /**
  * 20180221 Beck Pang, implementing intensity derivative
@@ -213,18 +220,13 @@ void init_node_vector()
     int x, y;
     for ( i = 0; i < rows; ++i) {
         for (j = 0; j < cols; ++j) {
-            Pixel_Node pixel_node = {};
-            pixel_node.state        = NODE_INITIAL;
-            pixel_node.row          = i;
-            pixel_node.col          = j;
-            pixel_node.total_cost   = INF_COST;
-            pixel_node.prevNode     = nullptr;
+            auto pixel_node = new Pixel_Node(i, j);
 
             // Set link cost for normal and edge case
             if ( i == 0 || i == rows-1 || j == 0 || j == cols-1 )
             {
                 for (k = 0; k < 9; ++k)
-                    pixel_node.link_cost[k] = INF_COST;
+                    pixel_node->link_cost[k] = INF_COST;
             }
             else
             {
@@ -234,9 +236,9 @@ void init_node_vector()
                 for (k = -1; k <= 1; ++k) {
                     for (m = -1; m <= 1; ++m) {
                         if  (k == 0 && m == 0)
-                            pixel_node.link_cost[count] = 0;
+                            pixel_node->link_cost[count] = INF_COST;
                         else
-                            pixel_node.link_cost[count] = image_gradient.at<Vec3b>( x+k, y+m )[0];
+                            pixel_node->link_cost[count] = image_gradient.at<Vec3b>( x+k, y+m )[0];
                         count++;
                     }
                 }
@@ -245,9 +247,24 @@ void init_node_vector()
             node_vector.push_back(pixel_node);
         }
     }
+#ifdef DEBUG_NODE_VECTOR
+    int expected_x, expected_y;
+    for ( expected_x = 0; expected_x < rows/10; ++expected_x) {
+        for ( expected_y = 0; expected_y < cols/10; ++expected_y) {
+            auto seed_source = expected_x * cols + expected_y;
+            Pixel_Node* current = node_vector[seed_source];
+            cout << "expected_x = " << expected_x << " expected_y = " << expected_y << endl;
+            current->Print();
+        }
+    }
+#endif
 }
 
-priority_queue<Pixel_Node> active_nodes = {};
+//priority_queue<Pixel_Node> active_nodes = {};
+//FibHeap *active_nodes = nullptr;
+Pixel_Node *Min;
+Pixel_Node *root;
+Pixel_Node *current;
 
 /**
  * minimum cost path
@@ -263,37 +280,65 @@ bool minimum_cost_path_dijkstra(Point* seed, Point* dest, void* return_dist, voi
     rows = image_src.rows;
     cols = image_src.cols;
 
-    auto seed_source = seed->x * rows + seed->y;
-    Pixel_Node root = node_vector[seed_source];
+    // Init fibonacci heap, note: this heap can't take all pixels in
+//    active_nodes = new FibHeap();
+    FibHeap active_nodes;
 
-    root.total_cost = 0;
+    auto seed_source = seed->x * cols + seed->y;
+    Pixel_Node* root = node_vector[seed_source];
+    root->total_cost = 0;
+    active_nodes.Insert(root);
 
-    active_nodes.push(root);
 
-#ifdef DEBUG
-//    for (int i = 0; i < rows - 1; ++i) {
-//        for (int j = 0; j < cols - 1; ++j) {
-//            active_nodes.push(node_vector[i * rows + j]);
-//        }
-//    }
-//
-//    Pixel_Node current = active_nodes.top();
-//    active_nodes.pop(); // remove the top element
-//    cout << "cost for first on the queue = "<< current.total_cost << endl;
-//
-//    Pixel_Node second = active_nodes.top();
-//    active_nodes.pop(); // remove the top element
-//    cout << "cost for first on the queue = "<< second.total_cost << endl;
+#ifdef DEBUG_DIJKSTRA
+    cout << "node vector stores " << node_vector.size() << " nodes" << endl;
+
+    FibHeap test_nodes;
+
+    Pixel_Node* test = node_vector[100];
+    test->total_cost = 100;
+    test_nodes.Insert(test);
+
+    for (int i = 0; i < rows; ++i) {
+        for (int j = 0; j < cols; ++j) {
+            int node_number = i * cols + j;
+            test_nodes.Insert(node_vector[node_number]);
+//            test_nodes.Insert(node_vector[j]);
+//            if (node_vector[i * cols + j]->total_cost != INF_COST)
+//            {
+//                node_vector[i * cols + j]->Print();
+//                cout << "number of nodes: " << test_nodes.GetNumNodes() << endl;
+//            }
+        }
+    }
+
+    auto current = (Pixel_Node*)test_nodes.ExtractMin();
+    cout << "cost for first on the queue = "<< current->total_cost << endl;
+    auto second  = (Pixel_Node*)test_nodes.ExtractMin();
+    cout << "cost for second on the queue = "<< second->total_cost << endl;
+
+    int index = (current->row + 1) * cols + (current->col + 1);
+    Pixel_Node* neighbor  = node_vector[index];
+    auto temp_node = new Pixel_Node(neighbor->row, neighbor->col);
+    temp_node->prevNode   = current;
+    temp_node->total_cost = current->total_cost + current->link_cost[8];
+
+    cout << "cost for neighbor before decrease key = "<< neighbor->total_cost << endl;
+    test_nodes.DecreaseKey(neighbor, *temp_node);
+    cout << "cost for neighbor after decrease key  = "<< neighbor->total_cost << endl;
 #endif
 
-    while ( !active_nodes.empty() )
+    while ( active_nodes.GetNumNodes() > 0 )
     {
-        Pixel_Node current = active_nodes.top();
-        active_nodes.pop(); // remove the top element
+        auto current = (Pixel_Node*)active_nodes.ExtractMin();
+//        active_nodes.pop(); // remove the top element
 
-        current.state = NODE_EXPANDED;
+        cout << "number of nodes: " << active_nodes.GetNumNodes() << endl;
+        current->Print();
 
-        if (current.row == dest->x && current.col == dest->y)
+        current->state = Pixel_Node::EXPANDED;
+
+        if (current->row == dest->x && current->col == dest->y)
         {
             // reached destination
             return true;
@@ -304,28 +349,35 @@ bool minimum_cost_path_dijkstra(Point* seed, Point* dest, void* return_dist, voi
         // Expand its neighbor nodes
         for ( i = 0; i < 3; ++i) {
             for ( j = 0; j < 3; ++j) {
-                index = (current.row + i - 1) * rows + (current.col + j - 1);
-                Pixel_Node* neighbor = &node_vector[index];
-                if (neighbor->state == NODE_INITIAL)
+                index = (current->row + i - 1) * cols + (current->col + j - 1);
+                Pixel_Node* neighbor = node_vector[index];
+                if (neighbor->state == Pixel_Node::INITIAL)
                 {
-                    neighbor->prevNode   = &current;
-                    neighbor->total_cost = current.total_cost + current.link_cost[i * 3 + j];
-                    neighbor->state      = NODE_ACTIVE;
-                    active_nodes.push(*neighbor);
+                    neighbor->prevNode   = current;
+                    neighbor->total_cost = current->total_cost + current->link_cost[i * 3 + j];
+                    neighbor->state      = Pixel_Node::ACTIVE;
+//                    active_nodes.push(*neighbor);
+                    active_nodes.Insert(neighbor);
                 }
-                else if (neighbor->state == NODE_ACTIVE)
+
+                else if (neighbor->state == Pixel_Node::ACTIVE)
                 {
-                    if (current.total_cost + current.link_cost[i * 3 + j] < neighbor->total_cost)
+                    if (current->total_cost + current->link_cost[i * 3 + j] < neighbor->total_cost)
                     {
-                        neighbor->prevNode   = &current;
-                        neighbor->total_cost = current.total_cost + current.link_cost[i * 3 + j];
-                        // TODO: original node never gets updated
-                        active_nodes.push(*neighbor);
+                        neighbor->prevNode   = current;
+                        neighbor->total_cost = current->total_cost + current->link_cost[i * 3 + j];
+                        Pixel_Node new_node(neighbor->row, neighbor->col);
+                        new_node.prevNode   = current;
+                        new_node.total_cost = current->total_cost + current->link_cost[i * 3 + j];
+//                        active_nodes.push(*neighbor);
+                        active_nodes.DecreaseKey(neighbor, new_node);
                     }
                 }
+
             }
         }
     }
+
     return false;
 }
 
@@ -368,19 +420,33 @@ int main( int argc, char** argv )
         return -1;
     }
 
-    // Create a window
-    namedWindow("Display window", WINDOW_AUTOSIZE);
-
-    // set the callback function for any mouse event
-    setMouseCallback("Display window", mouse_callback, nullptr);
-
-    // show the image
-    imshow("Display window", image_src);
+//    // Create a window
+//    namedWindow("Display window", WINDOW_AUTOSIZE);
+//
+//    // set the callback function for any mouse event
+//    setMouseCallback("Display window", mouse_callback, nullptr);
+//
+//    // show the image
+//    imshow("Display window", image_src);
 
     //// Algorithm part
     calculate_cost_image();
 
     init_node_vector();
+
+//#ifdef DEBUG
+//    heap.push(100);
+//    heap.push(400);
+//    boost::heap::fibonacci_heap<int>::handle_type handle = heap.push(300);
+//
+//    cout << "testing boost library " << heap.top() << " count " << heap.size()<< endl;
+//    heap.pop();
+//    cout << "After remove count " << heap.size() << endl;
+//
+//    handle.node_->value = 40;
+//    heap.update(handle);
+//    cout << "update success with value " << heap.top() << endl;
+//#endif
 
     Point seed_point(200, 200);
     Point dest_point(300, 300);

@@ -5,14 +5,16 @@
 #ifndef INTELLIGENT_SCISSOR_H
 #define INTELLIGENT_SCISSOR_H
 
-#define INF_COST 65535
+#include "fibheap.h"
 
-enum
-{
-    NODE_INITIAL=1,
-    NODE_ACTIVE =2,
-    NODE_EXPANDED=3
-};
+#define INF_COST 0x0FFFFFFF
+
+//enum
+//{
+//    NODE_INITIAL=1,
+//    NODE_ACTIVE =2,
+//    NODE_EXPANDED=3
+//};
 
 /**
  * Pixel node structure
@@ -20,8 +22,9 @@ enum
  * upper left link as link_cost[0], increment left to right
  * link cost to itself as link_cost[4] is zero
  */
-typedef struct Pixel_Node
+class Pixel_Node : public FibHeapNode
 {
+public:
     int state;
     int row, col;
 
@@ -30,14 +33,69 @@ typedef struct Pixel_Node
 
     Pixel_Node* prevNode; // connecting to multiple other nodes called graph
 
-    // For priority queue "push with priority"
-    // If the cost is high, the priority is low
-    bool operator < (const struct Pixel_Node &another) const {
-        return this->total_cost > another.total_cost;
+    enum Node_state{INITIAL, ACTIVE, EXPANDED};
+    // constructor
+    Pixel_Node(int row, int col) : FibHeapNode()
+    {
+        this->state        = INITIAL;
+        this->row          = row;
+        this->col          = col;
+        this->total_cost   = INF_COST;
+        this->prevNode     = nullptr;
+        for (int i = 0; i < 9; ++i) { this->link_cost[i] = INF_COST; }
     }
-}Pixel_Node;
 
-std::vector<Pixel_Node> node_vector;
+    virtual void operator =  (FibHeapNode &RHS);
+    virtual int  operator == (FibHeapNode &RHS);
+    virtual int  operator <  (FibHeapNode &RHS);
+
+    virtual void Print();
+};
+
+void Pixel_Node::Print()
+{
+    FibHeapNode::Print();
+    cout << "state: " << state << " row: " << row << " col: " << col << " cost: " << total_cost << endl;
+}
+
+void Pixel_Node::operator = (FibHeapNode &RHS)
+{
+    auto pRHS = (Pixel_Node&) RHS;
+    FHN_Assign(RHS);
+    this->state  = pRHS.state;
+    this->row    = pRHS.row;
+    this->col    = pRHS.col;
+    this->total_cost = pRHS.total_cost;
+    this->prevNode   = pRHS.prevNode;
+    for (int i = 0; i < 9; ++i) { this->link_cost[i] = pRHS.link_cost[i]; }
+}
+
+int Pixel_Node::operator == (FibHeapNode &RHS)
+{
+    auto pRHS = (Pixel_Node&) RHS;
+
+    // Make sure both sides are not negative infinite
+    if (FHN_Cmp(RHS)) return 0;
+
+//    return (this->row == pRHS.row && this->col == pRHS.col) ? 1 : 0;
+
+    // Misunderstand the ==, should be comparing the cost
+    return total_cost == pRHS.total_cost;
+}
+
+
+int Pixel_Node::operator < (FibHeapNode &RHS)
+{
+    int X;
+    if ((X = FHN_Cmp(RHS)) != 0)
+        return X < 0 ? 1 : 0;
+
+    // For priority queue "push with priority", if the cost is high, the priority is low
+    // For fibonacci node, the priority is high when the return number is large
+    return this->total_cost < ((Pixel_Node&) RHS).total_cost ? 1 : 0;
+}
+
+std::vector<Pixel_Node*> node_vector;
 cv::Mat image_src, image_gradient, image_path_tree;
 
 #endif //INTELLIGENT_SCISSOR_H
