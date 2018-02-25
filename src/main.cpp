@@ -262,36 +262,29 @@ void init_node_vector()
 
 //priority_queue<Pixel_Node> active_nodes = {};
 //FibHeap *active_nodes = nullptr;
+FibHeap active_nodes;
 Pixel_Node *Min;
 Pixel_Node *root;
 Pixel_Node *current;
 
 /**
- * minimum cost path
- * a recursive function from dijkstra's algorithm
+ * @brief calculate a minimum cost path for the seed point within a picture
+ *          a recursive function from dijkstra's algorithm
  * @input seed
- * @input graph
- * @output return_dist
- * @output return_prev
  */
-bool minimum_cost_path_dijkstra(Point* seed, Point* dest, void* return_dist, void* return_prev)
+bool minimum_cost_path_dijkstra(Point* seed)
 {
     int rows, cols; // coordinate of the pixel
     rows = image_src.rows;
     cols = image_src.cols;
-
-    // Init fibonacci heap, note: this heap can't take all pixels in
-//    active_nodes = new FibHeap();
-    FibHeap active_nodes;
 
     auto seed_source = seed->x * cols + seed->y;
     Pixel_Node* root = node_vector[seed_source];
     root->total_cost = 0;
     active_nodes.Insert(root);
 
-
 #ifdef DEBUG_DIJKSTRA
-    cout << "node vector stores " << node_vector.size() << " nodes" << endl;
+    cout << "node vector has " << node_vector.size() << " element." << endl;
 
     FibHeap test_nodes;
 
@@ -331,57 +324,60 @@ bool minimum_cost_path_dijkstra(Point* seed, Point* dest, void* return_dist, voi
     while ( active_nodes.GetNumNodes() > 0 )
     {
         auto current = (Pixel_Node*)active_nodes.ExtractMin();
-//        active_nodes.pop(); // remove the top element
 
-        cout << "number of nodes: " << active_nodes.GetNumNodes() << endl;
+//        cout << "number of nodes: " << active_nodes.GetNumNodes() << endl;
 //        current->Print();
 
         current->state = Pixel_Node::EXPANDED;
 
-        if (current->row == dest->x && current->col == dest->y)
-        {
-            // reached destination
-            return true;
-        }
+//        if (current->row == dest->x && current->col == dest->y)
+//        {
+//            // reached destination
+//            return true;
+//        }
 
-        int i, j, k;
+        int i, j;
         int index;
+        int x_now, y_now;
         // Expand its neighbor nodes
         for ( i = 0; i < 3; ++i) {
             for ( j = 0; j < 3; ++j) {
-                index = (current->row + i - 1) * cols + (current->col + j - 1);
-                Pixel_Node* neighbor = node_vector[index];
-                if (neighbor->state == Pixel_Node::INITIAL)
-                {
-                    neighbor->prevNode   = current;
-                    neighbor->total_cost = current->total_cost + current->link_cost[i * 3 + j];
-                    neighbor->state      = Pixel_Node::ACTIVE;
-//                    active_nodes.push(*neighbor);
-                    active_nodes.Insert(neighbor);
-                }
+                x_now = current->row + i - 1;
+                y_now = current->col + j - 1;
 
-                else if (neighbor->state == Pixel_Node::ACTIVE)
+                // Keep the index within boundary
+                if ( x_now >= 0 && x_now < rows && y_now >= 0 && y_now < cols )
                 {
-                    if (current->total_cost + current->link_cost[i * 3 + j] < neighbor->total_cost)
+                    index = x_now * cols + y_now;
+                    Pixel_Node* neighbor = node_vector[index];
+
+//                    neighbor->Print();
+
+                    if (neighbor->state == Pixel_Node::INITIAL)
                     {
-//                        cout << "decreased key from and to" << endl;
-//                        neighbor->Print();
+                        neighbor->prevNode   = current;
+                        neighbor->total_cost = current->total_cost + current->link_cost[i * 3 + j];
+                        neighbor->state      = Pixel_Node::ACTIVE;
+                        active_nodes.Insert(neighbor);
+                    }
 
-                        Pixel_Node new_node(neighbor->row, neighbor->col);
-                        new_node = *neighbor; // Get a copy of the original node
-                        new_node.total_cost = current->total_cost + current->link_cost[i * 3 + j];
-                        new_node.prevNode   = current;
-                        active_nodes.DecreaseKey(neighbor, new_node);
-
-//                        neighbor->Print();
+                    else if (neighbor->state == Pixel_Node::ACTIVE)
+                    {
+                        if (current->total_cost + current->link_cost[i * 3 + j] < neighbor->total_cost)
+                        {
+                            Pixel_Node new_node(neighbor->row, neighbor->col);
+                            new_node = *neighbor; // Get a copy of the original node
+                            new_node.total_cost = current->total_cost + current->link_cost[i * 3 + j];
+                            new_node.prevNode   = current;
+                            active_nodes.DecreaseKey(neighbor, new_node);
+                        }
                     }
                 }
-
             }
         }
     }
 
-    return false;
+    return true;
 }
 
 /*
@@ -455,7 +451,7 @@ int main( int argc, char** argv )
     Point dest_point(300, 300);
     int dist;
     int prev;
-    bool result = minimum_cost_path_dijkstra(&seed_point, &dest_point,(void*) &dist, (void*) &prev);
+    bool result = minimum_cost_path_dijkstra(&seed_point);
     cout << "dijkstra result " << result << endl;
 
     waitKey(10000);
