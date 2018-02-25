@@ -260,46 +260,42 @@ void init_node_vector()
 #endif
 }
 
-//priority_queue<Pixel_Node> active_nodes = {};
-//FibHeap *active_nodes = nullptr;
-FibHeap active_nodes;
-Pixel_Node *Min;
-Pixel_Node *root;
-Pixel_Node *current;
-
 /**
  * @brief calculate a minimum cost path for the seed point within a picture
  *          a recursive function from dijkstra's algorithm
- * @input seed
+ * @input seed, pixel coordinate for a picture
  */
-bool minimum_cost_path_dijkstra(Point* seed)
+bool minimum_cost_path_dijkstra(Point* seed, vector<Pixel_Node*> *nodes_graph)
 {
     int rows, cols; // coordinate of the pixel
     rows = image_src.rows;
     cols = image_src.cols;
 
+    FibHeap active_nodes; // Local priority heap that will be empty in the end
+
     auto seed_source = seed->x * cols + seed->y;
-    Pixel_Node* root = node_vector[seed_source];
+    Pixel_Node* root = nodes_graph->data()[seed_source];
     root->total_cost = 0;
     active_nodes.Insert(root);
 
 #ifdef DEBUG_DIJKSTRA
-    cout << "node vector has " << node_vector.size() << " element." << endl;
+    cout << "local node graph has " << nodes_graph->size() << " element." << endl;
 
     FibHeap test_nodes;
 
-    Pixel_Node* test = node_vector[100];
+    Pixel_Node* test = nodes_graph->data()[100];
     test->total_cost = 100;
     test_nodes.Insert(test);
+    test->total_cost = INF_COST;
 
     for (int i = 0; i < rows; ++i) {
         for (int j = 0; j < cols; ++j) {
             int node_number = i * cols + j;
-            test_nodes.Insert(node_vector[node_number]);
-//            test_nodes.Insert(node_vector[j]);
-//            if (node_vector[i * cols + j]->total_cost != INF_COST)
+            test_nodes.Insert(nodes_graph->data()[node_number]);
+//            test_nodes.Insert(nodes_graph->data()[j]);
+//            if (nodes_graph->data()[i * cols + j]->total_cost != INF_COST)
 //            {
-//                node_vector[i * cols + j]->Print();
+//                nodes_graph->data()[i * cols + j]->Print();
 //                cout << "number of nodes: " << test_nodes.GetNumNodes() << endl;
 //            }
         }
@@ -311,7 +307,7 @@ bool minimum_cost_path_dijkstra(Point* seed)
     cout << "cost for second on the queue = "<< second->total_cost << endl;
 
     int index = (current->row + 1) * cols + (current->col + 1);
-    Pixel_Node* neighbor  = node_vector[index];
+    Pixel_Node* neighbor  = nodes_graph->data()[index];
     auto temp_node = new Pixel_Node(neighbor->row, neighbor->col);
     temp_node->prevNode   = current;
     temp_node->total_cost = current->total_cost + current->link_cost[8];
@@ -349,7 +345,7 @@ bool minimum_cost_path_dijkstra(Point* seed)
                 if ( x_now >= 0 && x_now < rows && y_now >= 0 && y_now < cols )
                 {
                     index = x_now * cols + y_now;
-                    Pixel_Node* neighbor = node_vector[index];
+                    Pixel_Node* neighbor = nodes_graph->data()[index];
 
 //                    neighbor->Print();
 
@@ -433,25 +429,12 @@ int main( int argc, char** argv )
 
     init_node_vector();
 
-//#ifdef DEBUG
-//    heap.push(100);
-//    heap.push(400);
-//    boost::heap::fibonacci_heap<int>::handle_type handle = heap.push(300);
-//
-//    cout << "testing boost library " << heap.top() << " count " << heap.size()<< endl;
-//    heap.pop();
-//    cout << "After remove count " << heap.size() << endl;
-//
-//    handle.node_->value = 40;
-//    heap.update(handle);
-//    cout << "update success with value " << heap.top() << endl;
-//#endif
-
     Point seed_point(200, 200);
-    Point dest_point(300, 300);
-    int dist;
-    int prev;
-    bool result = minimum_cost_path_dijkstra(&seed_point);
+//    Point dest_point(300, 300);
+    vector<Pixel_Node*> nodes_graph_for_seed;
+    nodes_graph_for_seed = node_vector;
+
+    bool result = minimum_cost_path_dijkstra(&seed_point, &nodes_graph_for_seed);
     cout << "dijkstra result " << result << endl;
 
     waitKey(10000);
