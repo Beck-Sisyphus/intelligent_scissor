@@ -6,11 +6,9 @@
 #include "opencv2/opencv.hpp"
 #include <cstdio>
 #include <iostream>
-//#include <queue>
 #include <vector>
 #include "scissor.h"
-//#include "fibheap.h"
-#include "boost/heap/fibonacci_heap.hpp"
+#include "plot.h"
 
 #define DEBUG
 
@@ -20,13 +18,12 @@
 
 //#define COST_GRAPH
 
+#define PATH_TREE
+
 using namespace cv;
 using namespace std;
 
 String image_directory = "../image/avatar.jpg";
-String cost_graph_directory = "../image/avatar_cost_graph.jpg";
-boost::heap::fibonacci_heap<int> heap;
-
 
 /**
  * 20180221 Beck Pang, implementing intensity derivative
@@ -41,11 +38,11 @@ int calculate_cost_image()
     rows = image_src.rows;
     cols = image_src.cols;
 #ifdef DEBUG
-    cout << "rows = "  << rows << ", cols = " << cols << endl;
+    cout << "rows = " << rows << ", cols = " << cols << endl;
 #endif
 
     // a new picture with nine times the size of original picture, all white pixels
-    image_gradient = Mat( (rows-2) * 3, (cols-2) * 3, CV_8UC3, Scalar(255, 255, 255));
+    image_gradient = Mat((rows - 2) * 3, (cols - 2) * 3, CV_8UC3, Scalar(255, 255, 255));
 //    image_gradient.at<Vec3b>( 937,1267 )[0] = 0;
 
     double D_square[8] = {0};
@@ -55,83 +52,83 @@ int calculate_cost_image()
 
     int i, j, k, l; // iterators for the original picture
     int x, y;       // iterators for the gradient
-    for ( i = 1; i < rows - 1; ++i) {
-        for ( j = 1; j < cols - 1; ++j) {
+    for (i = 1; i < rows - 1; ++i) {
+        for (j = 1; j < cols - 1; ++j) {
             // initialize
-            for ( k = 0; k < 8; ++k) {
-                link[k]  = 0;
+            for (k = 0; k < 8; ++k) {
+                link[k] = 0;
                 D_square[k] = 0;
             }
 
             //// diagonal link,   D(link1)=| img(i+1,j) - img(i,j-1) |/sqrt(2)
             // x + 1, y - 1
-            pixel[0] = image_src.at<Vec3b>( i+1 , j   );
-            pixel[1] = image_src.at<Vec3b>( i   , j-1 );
+            pixel[0] = image_src.at<Vec3b>(i + 1, j);
+            pixel[1] = image_src.at<Vec3b>(i, j - 1);
 
             // x - 1, y - 1
-            pixel[2] = image_src.at<Vec3b>( i   , j-1 );
-            pixel[3] = image_src.at<Vec3b>( i-1 , j   );
+            pixel[2] = image_src.at<Vec3b>(i, j - 1);
+            pixel[3] = image_src.at<Vec3b>(i - 1, j);
 
             // x - 1, y + 1
-            pixel[4] = image_src.at<Vec3b>( i-1 , j   );
-            pixel[5] = image_src.at<Vec3b>( i   , j+1 );
+            pixel[4] = image_src.at<Vec3b>(i - 1, j);
+            pixel[5] = image_src.at<Vec3b>(i, j + 1);
 
             // x + 1, y + 1
-            pixel[6] = image_src.at<Vec3b>( i   , j+1 );
-            pixel[7] = image_src.at<Vec3b>( i+1 , j   );
+            pixel[6] = image_src.at<Vec3b>(i, j + 1);
+            pixel[7] = image_src.at<Vec3b>(i + 1, j);
 
             // Calculate link[1],[3],[5],[7]
-            for ( k = 0; k < 4; ++k) {
+            for (k = 0; k < 4; ++k) {
                 int m = 2 * k + 1;
-                for ( l = 0; l < 3; ++l) {
+                for (l = 0; l < 3; ++l) {
                     D_square[m] += pow(pixel[m - 1][l] - pixel[m][l], 2);
                 }
-                link[m] = (int)sqrt(D_square[m] / 6);
+                link[m] = (int) sqrt(D_square[m] / 6);
             }
 
             //// horizontal link, D(link0)=|(img(i,j-1) + img(i+1,j-1))/2 - (img(i,j+1) + img(i+1,j+1))/2|/2
             // x + 1, y
-            pixel[0] = image_src.at<Vec3b>( i   , j-1 );
-            pixel[1] = image_src.at<Vec3b>( i+1 , j-1 );
-            pixel[2] = image_src.at<Vec3b>( i   , j+1 );
-            pixel[3] = image_src.at<Vec3b>( i+1 , j+1 );
+            pixel[0] = image_src.at<Vec3b>(i, j - 1);
+            pixel[1] = image_src.at<Vec3b>(i + 1, j - 1);
+            pixel[2] = image_src.at<Vec3b>(i, j + 1);
+            pixel[3] = image_src.at<Vec3b>(i + 1, j + 1);
 
             // x - 1, y
-            pixel[4] = image_src.at<Vec3b>( i   , j-1 );
-            pixel[5] = image_src.at<Vec3b>( i-1 , j-1 );
-            pixel[6] = image_src.at<Vec3b>( i   , j+1 );
-            pixel[7] = image_src.at<Vec3b>( i-1 , j+1 );
+            pixel[4] = image_src.at<Vec3b>(i, j - 1);
+            pixel[5] = image_src.at<Vec3b>(i - 1, j - 1);
+            pixel[6] = image_src.at<Vec3b>(i, j + 1);
+            pixel[7] = image_src.at<Vec3b>(i - 1, j + 1);
 
-            for ( l = 0; l < 3; ++l) {
-                D_square[0] += pow( (pixel[0][l] + pixel[1][l])/2 - (pixel[2][l] + pixel[3][l])/2 , 2);
-                D_square[4] += pow( (pixel[4][l] + pixel[5][l])/2 - (pixel[6][l] + pixel[7][l])/2 , 2);
+            for (l = 0; l < 3; ++l) {
+                D_square[0] += pow((pixel[0][l] + pixel[1][l]) / 2 - (pixel[2][l] + pixel[3][l]) / 2, 2);
+                D_square[4] += pow((pixel[4][l] + pixel[5][l]) / 2 - (pixel[6][l] + pixel[7][l]) / 2, 2);
             }
-            link[0] = (int)sqrt(D_square[0] / 12);
-            link[4] = (int)sqrt(D_square[4] / 12);
+            link[0] = (int) sqrt(D_square[0] / 12);
+            link[4] = (int) sqrt(D_square[4] / 12);
 
             //// vertical link,   D(link2)=|(img(i-1,j) + img(i-1,j-1))/2 - (img(i+1,j) + img(i+1,j-1))/2|/2.
             // x    , y - 1
-            pixel[0] = image_src.at<Vec3b>( i-1 , j   );
-            pixel[1] = image_src.at<Vec3b>( i-1 , j-1 );
-            pixel[2] = image_src.at<Vec3b>( i+1 , j   );
-            pixel[3] = image_src.at<Vec3b>( i+1 , j-1 );
+            pixel[0] = image_src.at<Vec3b>(i - 1, j);
+            pixel[1] = image_src.at<Vec3b>(i - 1, j - 1);
+            pixel[2] = image_src.at<Vec3b>(i + 1, j);
+            pixel[3] = image_src.at<Vec3b>(i + 1, j - 1);
 
             // x    , y + 1
-            pixel[4] = image_src.at<Vec3b>( i+1 , j   );
-            pixel[5] = image_src.at<Vec3b>( i+1 , j+1 );
-            pixel[6] = image_src.at<Vec3b>( i-1 , j   );
-            pixel[7] = image_src.at<Vec3b>( i-1 , j+1 );
+            pixel[4] = image_src.at<Vec3b>(i + 1, j);
+            pixel[5] = image_src.at<Vec3b>(i + 1, j + 1);
+            pixel[6] = image_src.at<Vec3b>(i - 1, j);
+            pixel[7] = image_src.at<Vec3b>(i - 1, j + 1);
 
 
-            for ( l = 0; l < 3; ++l) {
-                D_square[2] += pow( (pixel[0][l] + pixel[1][l])/2 - (pixel[2][l] + pixel[3][l])/2 , 2);
-                D_square[6] += pow( (pixel[4][l] + pixel[5][l])/2 - (pixel[6][l] + pixel[7][l])/2 , 2);
+            for (l = 0; l < 3; ++l) {
+                D_square[2] += pow((pixel[0][l] + pixel[1][l]) / 2 - (pixel[2][l] + pixel[3][l]) / 2, 2);
+                D_square[6] += pow((pixel[4][l] + pixel[5][l]) / 2 - (pixel[6][l] + pixel[7][l]) / 2, 2);
             }
-            link[2] = (int)sqrt(D_square[2] / 12);
-            link[6] = (int)sqrt(D_square[6] / 12);
+            link[2] = (int) sqrt(D_square[2] / 12);
+            link[6] = (int) sqrt(D_square[6] / 12);
 
             //// Find maxD and add the cost graph
-            for ( k = 0; k < 8; ++k) {
+            for (k = 0; k < 8; ++k) {
                 if (link[l] > maxD)
                     maxD = link[l];
             }
@@ -139,36 +136,40 @@ int calculate_cost_image()
             x = i * 3 - 2;
             y = j * 3 - 2;
 
-            for ( k = 0; k < 3; ++k) {
-                image_gradient.at<Vec3b>( x  , y   )[k] = 255;
-                image_gradient.at<Vec3b>( x+1, y-1 )[k] = (uchar)link[0];
-                image_gradient.at<Vec3b>( x-1, y-1 )[k] = (uchar)link[1];
-                image_gradient.at<Vec3b>( x-1, y+1 )[k] = (uchar)link[2];
-                image_gradient.at<Vec3b>( x+1, y+1 )[k] = (uchar)link[3];
-                image_gradient.at<Vec3b>( x+1, y   )[k] = (uchar)link[4];
-                image_gradient.at<Vec3b>( x-1, y   )[k] = (uchar)link[5];
-                image_gradient.at<Vec3b>( x  , y-1 )[k] = (uchar)link[6];
-                image_gradient.at<Vec3b>( x  , y+1 )[k] = (uchar)link[7];
+            for (k = 0; k < 3; ++k) {
+                image_gradient.at<Vec3b>(x, y)[k] = 255;
+                image_gradient.at<Vec3b>(x + 1, y - 1)[k] = (uchar) link[0];
+                image_gradient.at<Vec3b>(x - 1, y - 1)[k] = (uchar) link[1];
+                image_gradient.at<Vec3b>(x - 1, y + 1)[k] = (uchar) link[2];
+                image_gradient.at<Vec3b>(x + 1, y + 1)[k] = (uchar) link[3];
+                image_gradient.at<Vec3b>(x + 1, y)[k] = (uchar) link[4];
+                image_gradient.at<Vec3b>(x - 1, y)[k] = (uchar) link[5];
+                image_gradient.at<Vec3b>(x, y - 1)[k] = (uchar) link[6];
+                image_gradient.at<Vec3b>(x, y + 1)[k] = (uchar) link[7];
             }
         }
     }
 
 
-    for ( i = 1; i < rows - 1; ++i) {
-        for ( j = 1; j < cols - 1; ++j) {
+    for (i = 1; i < rows - 1; ++i) {
+        for (j = 1; j < cols - 1; ++j) {
             x = i * 3 - 2;
             y = j * 3 - 2;
             //// update cost, cost(link)=(maxD - D(link)) * length(link)
-            for ( k = 0; k < 3; ++k) {
-                image_gradient.at<Vec3b>( x  , y   )[k] =                  image_gradient.at<Vec3b>( x  , y   )[k];
-                image_gradient.at<Vec3b>( x+1, y-1 )[k] = (uchar)( (maxD - image_gradient.at<Vec3b>( x+1, y-1 )[k]) * sqrt(2) );
-                image_gradient.at<Vec3b>( x-1, y-1 )[k] = (uchar)( (maxD - image_gradient.at<Vec3b>( x-1, y-1 )[k]) * sqrt(2) );
-                image_gradient.at<Vec3b>( x-1, y+1 )[k] = (uchar)( (maxD - image_gradient.at<Vec3b>( x-1, y+1 )[k]) * sqrt(2) );
-                image_gradient.at<Vec3b>( x+1, y+1 )[k] = (uchar)( (maxD - image_gradient.at<Vec3b>( x+1, y+1 )[k]) * sqrt(2) );
-                image_gradient.at<Vec3b>( x+1, y   )[k] = (uchar)( (maxD - image_gradient.at<Vec3b>( x+1, y   )[k]) );
-                image_gradient.at<Vec3b>( x-1, y   )[k] = (uchar)( (maxD - image_gradient.at<Vec3b>( x-1, y   )[k]) );
-                image_gradient.at<Vec3b>( x  , y-1 )[k] = (uchar)( (maxD - image_gradient.at<Vec3b>( x  , y-1 )[k]) );
-                image_gradient.at<Vec3b>( x  , y+1 )[k] = (uchar)( (maxD - image_gradient.at<Vec3b>( x  , y+1 )[k]) );
+            for (k = 0; k < 3; ++k) {
+                image_gradient.at<Vec3b>(x, y)[k] = image_gradient.at<Vec3b>(x, y)[k];
+                image_gradient.at<Vec3b>(x + 1, y - 1)[k] = (uchar) (
+                        (maxD - image_gradient.at<Vec3b>(x + 1, y - 1)[k]) * sqrt(2));
+                image_gradient.at<Vec3b>(x - 1, y - 1)[k] = (uchar) (
+                        (maxD - image_gradient.at<Vec3b>(x - 1, y - 1)[k]) * sqrt(2));
+                image_gradient.at<Vec3b>(x - 1, y + 1)[k] = (uchar) (
+                        (maxD - image_gradient.at<Vec3b>(x - 1, y + 1)[k]) * sqrt(2));
+                image_gradient.at<Vec3b>(x + 1, y + 1)[k] = (uchar) (
+                        (maxD - image_gradient.at<Vec3b>(x + 1, y + 1)[k]) * sqrt(2));
+                image_gradient.at<Vec3b>(x + 1, y)[k] = (uchar) ((maxD - image_gradient.at<Vec3b>(x + 1, y)[k]));
+                image_gradient.at<Vec3b>(x - 1, y)[k] = (uchar) ((maxD - image_gradient.at<Vec3b>(x - 1, y)[k]));
+                image_gradient.at<Vec3b>(x, y - 1)[k] = (uchar) ((maxD - image_gradient.at<Vec3b>(x, y - 1)[k]));
+                image_gradient.at<Vec3b>(x, y + 1)[k] = (uchar) ((maxD - image_gradient.at<Vec3b>(x, y + 1)[k]));
             }
 
 #ifdef DEBUG
@@ -182,26 +183,9 @@ int calculate_cost_image()
     }
 
 #ifdef DEBUG
-     cout << "maxD = " << maxD << endl;
+    cout << "maxD = " << maxD << endl;
 #endif
 
-#ifdef COST_GRAPH
-    // Create a window
-    namedWindow("gradient window", WINDOW_AUTOSIZE);
-    imshow("gradient window", image_gradient);
-
-    vector<int> compression_params;
-    compression_params.push_back(CV_IMWRITE_JPEG_QUALITY);
-    compression_params.push_back(95);
-    try {
-        imwrite(cost_graph_directory, image_gradient, compression_params);
-    }
-    catch (runtime_error& ex) {
-        fprintf(stderr, "Exception converting image to PNG format: %s\n", ex.what());
-        return 1;
-    }
-    fprintf(stdout, "Saved PNG file with alpha data.\n");
-#endif
     return 0;
 }
 
@@ -372,7 +356,6 @@ bool minimum_cost_path_dijkstra(Point* seed, vector<Pixel_Node*> *nodes_graph)
             }
         }
     }
-
     return true;
 }
 
@@ -407,7 +390,7 @@ void mouse_callback(int event, int x, int y, int flags, void* userdata)
 int main( int argc, char** argv )
 {
     image_src = imread(image_directory, CV_LOAD_IMAGE_COLOR);
-//    image_shown = image_src.clone();
+
 
     if (! image_src.data)
     {
@@ -415,26 +398,42 @@ int main( int argc, char** argv )
         return -1;
     }
 
-//    // Create a window
-//    namedWindow("Display window", WINDOW_AUTOSIZE);
-//
-//    // set the callback function for any mouse event
-//    setMouseCallback("Display window", mouse_callback, nullptr);
-//
-//    // show the image
-//    imshow("Display window", image_src);
+    // Create a window
+    namedWindow("Display window", WINDOW_AUTOSIZE);
+
+    // set the callback function for any mouse event
+    setMouseCallback("Display window", mouse_callback, nullptr);
+
+    // show the image
+    imshow("Display window", image_src);
 
     //// Algorithm part
     calculate_cost_image();
 
+#ifdef COST_GRAPH
+    plot_cost_graph(&image_gradient);
+#endif
+
     init_node_vector();
 
     Point seed_point(200, 200);
-//    Point dest_point(300, 300);
+    Point dest_point(300, 300);
     vector<Pixel_Node*> nodes_graph_for_seed;
     nodes_graph_for_seed = node_vector;
 
     bool result = minimum_cost_path_dijkstra(&seed_point, &nodes_graph_for_seed);
+
+    int rows, cols; // coordinate of the pixel
+    rows = image_src.rows;
+    cols = image_src.cols;
+
+    Mat image_path_plot = image_src.clone();
+
+#ifdef PATH_TREE
+    plot_path_tree(rows, cols, &nodes_graph_for_seed);
+    plot_path_tree_point_to_point(&seed_point, &dest_point, &nodes_graph_for_seed, &image_path_plot);
+#endif
+
     cout << "dijkstra result " << result << endl;
 
     waitKey(10000);

@@ -23,8 +23,9 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 
 include_directories(src/inc)
 
-#file(GLOB_RECURSE USER_SOURCES "src/*.cpp")
+add_library(NODE src/fibheap.cpp src/pixel_node.cpp)
+add_library(PLOT src/plot.cpp)
+# src/plot.cpp
+add_executable(intelligent_scissor src/main.cpp)
 
-add_executable(intelligent_scissor src/main.cpp src/fibheap.cpp)
-
-target_link_libraries(intelligent_scissor ${OpenCV_LIBS})
+target_link_libraries(intelligent_scissor ${OpenCV_LIBS} NODE PLOT)
