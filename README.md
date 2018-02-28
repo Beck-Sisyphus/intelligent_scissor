@@ -1,31 +1,35 @@
 # intelligent_scissor
 computer vision introduction practice on image segmentation
 
-Feb. 23rd, 2018
+Feb. 28rd, 2018
 
-PANG, Sui
+PAN, Jie && PANG, Sui
 
-## Overview
-
-Running:
-cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles"
+## Build
+```
+mkdir build
+cd build
+cmake ..
 make
 ./intelligent_scissor
+```
 
-Development environment:
+Supported Environment:
     macOS High Sierra
+    Ubuntu 16.04 LTS
+    
 Toolchain:
     editor:     CLion
     language:   C++
-    compiler:   cmake/make
-    dependency: OpenCV 3.4.01
+    compiler:   CMake/make 
+    dependency: OpenCV 3.2
     GUI:        OpenCV
 
-## Current process
-1. cost graph and cost graph plot (done)
+## Core Algorithm
+1. cost graph and cost graph plot
 2. pixel node, fibonacci heap (priority queue for now),
-    Dijkstra's algorithm for minimum path (in progress)
-3. graphic user interface: none
+    Dijkstra's algorithm for minimum path 
+3. graphic user interface
 
 
 
