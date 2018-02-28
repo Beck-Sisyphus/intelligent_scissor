@@ -5,11 +5,15 @@ set(CMAKE_BUILD_TYPE "Release")
 set(CMAKE_CXX_FLAGS "-std=c++11 -march=native")
 set(CMAKE_CXX_FLAGS_RELEASE "-Wall")
 
+IF(APPLE)
 # Deal with OpenCV problem on Mac
 set(CMAKE_PREFIX_PATH "/usr/local/Cellar/opencv/3.4.0_1/share/OpenCV")
 
 set(OpenCV_INCLUDE_DIRS "/usr/local/Cellar/opencv/3.4.0_1/include/")
 set(OpenCV_LIBS "/usr/local/Cellar/opencv/3.4.0_1/lib/libopencv_core.3.4.dylib")
+
+include_directories(${OpenCV_INCLUDE_DIRS})
+ENDIF(APPLE)
 
 find_package(OpenCV REQUIRED)
 
@@ -18,7 +22,6 @@ message(STATUS "    version: ${OpenCV_VERSION}")
 message(STATUS "    libraries: ${OpenCV_LIBS}")
 message(STATUS "    include path: ${OpenCV_INCLUDE_DIRS}")
 
-include_directories(${OpenCV_INCLUDE_DIRS})
 
 include_directories(src/inc)
 
