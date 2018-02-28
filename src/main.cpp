@@ -398,14 +398,15 @@ int main( int argc, char** argv )
         return -1;
     }
 
-    // Create a window
-    namedWindow("Display window", WINDOW_AUTOSIZE);
+//    // Create a window
+//    namedWindow("Display window", WINDOW_AUTOSIZE);
+//
+//    // show the image
+//    imshow("Display window", image_src);
 
     // set the callback function for any mouse event
     setMouseCallback("Display window", mouse_callback, nullptr);
 
-    // show the image
-    imshow("Display window", image_src);
 
     //// Algorithm part
     calculate_cost_image();
@@ -416,8 +417,8 @@ int main( int argc, char** argv )
 
     init_node_vector();
 
-    Point seed_point(200, 200);
-    Point dest_point(300, 300);
+    Point seed_point(250, 150);
+    Point dest_point(50, 250);
     vector<Pixel_Node*> nodes_graph_for_seed;
     nodes_graph_for_seed = node_vector;
 
@@ -430,7 +431,8 @@ int main( int argc, char** argv )
     Mat image_path_plot = image_src.clone();
 
 #ifdef PATH_TREE
-    plot_path_tree(rows, cols, &nodes_graph_for_seed);
+
+//    plot_path_tree(rows, cols, &nodes_graph_for_seed);
     plot_path_tree_point_to_point(&seed_point, &dest_point, &nodes_graph_for_seed, &image_path_plot);
 #endif
 

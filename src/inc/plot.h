@@ -6,6 +6,7 @@
 #define INTELLIGENT_SCISSOR_PLOT_H
 
 #include "opencv2/highgui/highgui.hpp"
+#include "opencv2/imgproc.hpp"
 #include <vector>
 #include "pixel_node.h"
 
