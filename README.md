@@ -49,19 +49,19 @@ We also needs to handle the user interface well for finishing this project. Ther
 1. Handling different type of images, jpeg, png, gif, etc.
 2. Handling mouse and keyboard command, as listed here:
 
-Ctrl+"+", zoom in;
+   - Ctrl+"+", zoom in;
 
-Ctrl+"-", zoom out;
+   - Ctrl+"-", zoom out;
 
-Ctrl+Left click first seed;
+   - Ctrl+Left click first seed;
 
-Left click, following seeds;
+   - Left click, following seeds;
 
-Enter, finish the current contour;
+   - Enter, finish the current contour;
 
-Ctrl+Enter, finish the current contour as closed;
+   - Ctrl+Enter, finish the current contour as closed;
 
-Backspace, when scissoring, delete the last seed; otherwise, delete selected contour.
+   - Backspace, when scissoring, delete the last seed; otherwise, delete selected contour.
 
 3. Store and go in the debug mode.
 
