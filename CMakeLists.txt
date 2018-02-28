@@ -12,7 +12,6 @@ set(OpenCV_INCLUDE_DIRS "/usr/local/Cellar/opencv/3.4.0_1/include/")
 set(OpenCV_LIBS "/usr/local/Cellar/opencv/3.4.0_1/lib/libopencv_core.3.4.dylib")
 
 find_package(OpenCV REQUIRED)
-find_package(boost REQUIRED)
 
 message(STATUS "OpenCV library status:")
 message(STATUS "    version: ${OpenCV_VERSION}")
