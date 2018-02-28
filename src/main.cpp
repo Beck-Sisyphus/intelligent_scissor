@@ -28,10 +28,14 @@
 
 //#define DEBUG_USER_INTERFACE
 
+#define ENABLE_BLUR
+
 using namespace cv;
 using namespace std;
 
-String image_directory = "../image/avatar.jpg";
+String image_avatar_directory = "../image/avatar.jpg";
+String image_lenna_directory  = "../image/lena_std.tif";
+String image_logo_directory   = "../image/logo_eye.jpg";
 
 extern String plot_window_name;
 extern Scalar point_to_point_color;
@@ -427,22 +431,43 @@ static void mouse_callback(int event, int x, int y, int flags, void *userdata)
     imshow(plot_window_name, current_image);
 }
 
-int main(int argc, char **argv)
+/**
+ * Handling different type of images, special for .gif
+ * @param image_directory
+ * @return
+ */
+int import_images(String directory)
 {
-    image_src  = imread(image_directory, CV_LOAD_IMAGE_COLOR);
+    if (directory.substr(directory.find_last_of(".") + 1) == "gif") {
+        return -1;
+    }
+    else {
+        image_original  = imread(directory, CV_LOAD_IMAGE_COLOR);
+    }
 
-    if (!image_src.data) {
+    if (!image_original.data) {
         cout << "Could not open or find the image" << endl;
         return -1;
     }
 
-    images_stack.push(image_src);
+    images_stack.push(image_original);
 
     // Create the point to point path
     namedWindow(plot_window_name, WINDOW_AUTOSIZE);
 
     imshow(plot_window_name, images_stack.top());
+    return 0;
+}
 
+int main(int argc, char **argv)
+{
+    import_images(image_logo_directory);
+
+    image_src = image_original.clone();
+
+#ifdef ENABLE_BLUR
+    GaussianBlur( image_original, image_src, Size( 7, 7 ), 0, 0 );
+#endif
     int coordinate[2];
     coordinate[0] = image_src.rows;
     coordinate[1] = image_src.cols;
