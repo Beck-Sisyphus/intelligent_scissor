@@ -26,7 +26,7 @@
 
 //#define PATH_TREE_DEBUG
 
-#define DEBUG_USER_INTERFACE
+//#define DEBUG_USER_INTERFACE
 
 using namespace cv;
 using namespace std;
