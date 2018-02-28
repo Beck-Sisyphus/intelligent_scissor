@@ -10,6 +10,7 @@
 #include <vector>
 #include "pixel_node.h"
 
+using namespace cv;
 
 int plot_cost_graph(cv::Mat* image_gradient);
 

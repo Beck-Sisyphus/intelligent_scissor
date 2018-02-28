@@ -4,14 +4,15 @@
 
 #include "plot.h"
 
-#define DEBUG_POINT_TO_POINT
+//#define DEBUG_POINT_TO_POINT
 
 using namespace cv;
 using namespace std;
 
-cv::String cost_graph_directory = "../image/avatar_cost_graph.jpg";
-cv::String path_tree_directory  = "../image/avatar_path_tree.jpg";
-cv::String point_to_point_direc = "../image/point_to_point.jpg";
+String cost_graph_directory = "../image/avatar_cost_graph.jpg";
+String path_tree_directory  = "../image/avatar_path_tree.jpg";
+String point_to_point_direc = "../image/point_to_point.jpg";
+String plot_window_name = "main window";
 auto path_graph_curr_color = Scalar(255, 191, 0);
 auto path_graph_prev_color = Scalar(127, 50, 0);
 auto point_to_point_color  = Scalar(0, 127, 255);
@@ -89,37 +90,47 @@ int plot_path_tree(int rows, int cols, vector<Pixel_Node*> *graph)
     return 1;
 }
 
+/**
+ * Test case to calculate the countor from one point to another
+ * @input seed
+ * @input dest
+ * @input graph
+ * @output image_plot
+ * @return
+ */
 int plot_path_tree_point_to_point(Point* seed, Point* dest, vector<Pixel_Node*> *graph, Mat* image_plot)
 {
-    circle(*image_plot, *seed, 3, point_to_point_color, 2);
-    circle(*image_plot, *dest, 3, point_to_point_color, 2);
-
     int index;
+    Pixel_Node *dest_node, *seed_node, *curr_node, *prev_node;
     index = dest->x * image_plot->cols + dest->y;
-    Pixel_Node* dest_node = graph->data()[index];
+    dest_node = graph->data()[index];
     assert(dest_node != nullptr);
 
     index = seed->x * image_plot->cols + seed->y;
-    Pixel_Node* seed_node = graph->data()[index];
+    seed_node = graph->data()[index];
     assert(seed_node != nullptr);
 
-    Pixel_Node* curr_node = dest_node;
-    Pixel_Node* prev_node;
+    curr_node = dest_node;
+
+//    cout << "dest  of the node in plot " << dest_node->row << " col "<< dest_node->col << endl;
+//    cout << "start of the node in plot " << curr_node->row << " col "<< curr_node->col << endl;
+
     // Track back from the graph
-    while ( !(*curr_node == *seed_node) )
+    while ( curr_node != nullptr && curr_node->prevNode != nullptr &&
+            !(curr_node->row == seed_node->row && curr_node->col == seed_node->col))
     {
         prev_node = curr_node->prevNode;
-        auto pointA = Point(curr_node->row, curr_node->col);
-        auto pointB = Point(prev_node->row, prev_node->col);
+        // Flip pixels in here too
+        auto pointA = Point(curr_node->col, curr_node->row);
+        auto pointB = Point(prev_node->col, prev_node->row);
         line(*image_plot, pointA, pointB, point_to_path_color, 2);
 
         curr_node = prev_node;
     }
+//    cout << "end   of the node in plot row " << prev_node->row << " col "<< prev_node->col << endl;
 
 #ifdef DEBUG_POINT_TO_POINT
-    // Create the point to point path
-    namedWindow("path point to point window", WINDOW_AUTOSIZE);
-    imshow("path point to point window", *image_plot);
+    imshow(plot_window_name, *image_plot);
 
     vector<int> compression_params;
     compression_params.push_back(CV_IMWRITE_JPEG_QUALITY);
@@ -133,7 +144,6 @@ int plot_path_tree_point_to_point(Point* seed, Point* dest, vector<Pixel_Node*> 
     }
     fprintf(stdout, "Saved jpeg for path tree.\n");
 #endif
-
 
     return 1;
 }
