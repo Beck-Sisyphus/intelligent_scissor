@@ -14,6 +14,9 @@ bool minimum_cost_path_dijkstra(int rows, int cols, Point *seed, vector<Pixel_No
 
 // Global node graph
 std::vector<Pixel_Node*> node_vector_original;
+stack< Point > points_stack;
+stack< Mat >   images_stack;
+stack< vector<Pixel_Node*> > graphs_stack;
 cv::Mat image_src, image_gradient, image_path_tree;
 
 #endif //INTELLIGENT_SCISSOR_H

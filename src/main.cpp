@@ -32,7 +32,12 @@ using namespace cv;
 using namespace std;
 
 String image_directory = "../image/avatar.jpg";
+
 extern String plot_window_name;
+extern Scalar point_to_point_color;
+
+int click_count = 0;
+
 /**
  * 20180221 Beck Pang, implementing intensity derivative
  * diagonal link,   D(link1)=| img(i+1,j) - img(i,j-1) |/sqrt(2)
@@ -318,14 +323,6 @@ bool minimum_cost_path_dijkstra(int rows, int cols, Point *seed, vector<Pixel_No
     return true;
 }
 
-stack< Point > points_stack;
-stack< Mat >   images_stack;
-stack< vector<Pixel_Node*> > graphs_stack;
-extern Scalar point_to_point_color;
-extern Scalar point_to_path_color;
-
-int click_count = 0;
-
 /**
  * OpenCV UI part, handling mouse actions
  */
@@ -441,33 +438,20 @@ int main(int argc, char **argv)
 
     images_stack.push(image_src);
 
-    int rows, cols; // coordinate of the pixel
-    rows = image_src.rows;
-    cols = image_src.cols;
-    int coordinate[2];
-    coordinate[0] = image_src.rows;
-    coordinate[1] = image_src.cols;
-
     // Create the point to point path
     namedWindow(plot_window_name, WINDOW_AUTOSIZE);
 
     imshow(plot_window_name, images_stack.top());
 
+    int coordinate[2];
+    coordinate[0] = image_src.rows;
+    coordinate[1] = image_src.cols;
+
     // set the callback function for any mouse event
     setMouseCallback(plot_window_name, mouse_callback, coordinate);
 
-    //// Algorithm part
+    // initialize the image gradient
     calculate_cost_image(&image_src, &image_gradient);
-
-//    init_node_vector(rows, cols, &node_vector_original, &image_gradient);
-
-    // Pre allocate the space to cut run time
-    Point seed_point = Point(100, 100);
-    vector<Pixel_Node *> space_malloc_graph;
-    init_node_vector(rows, cols, &space_malloc_graph, &image_gradient);
-    minimum_cost_path_dijkstra(rows, cols, &seed_point, &space_malloc_graph);
-
-    cout << "Init the seed point graph " << graphs_stack.size() << endl;
 
 #ifdef COST_GRAPH
     // Create a window
@@ -521,6 +505,10 @@ int main(int argc, char **argv)
 #endif
 
 #ifdef PATH_TREE_TEST
+    int rows, cols; // coordinate of the pixel
+    rows = image_src.rows;
+    cols = image_src.cols;
+
     plot_path_tree(rows, cols, &nodes_graph_for_seed);
 
     Mat image_path_plot = image_src.clone();
@@ -528,6 +516,7 @@ int main(int argc, char **argv)
     plot_path_tree_point_to_point(&seed_point, &current_mouse, &nodes_graph_for_seed, &image_path_plot);
 #endif
 
-    waitKey(20000);
+    // Wait for 10 minutes before closing
+    waitKey(600000);
     return 0;
 }
