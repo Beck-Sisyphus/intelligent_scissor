@@ -65,4 +65,7 @@ We also needs to handle the user interface well for finishing this project. Ther
 
 3. Store and go in the debug mode.
 
+## Artifact
+We bring our most fashionable lady on to our most fashionable chassis.
+![Lena on chassis](https://github.com/Beck-Sisyphus/intelligent_scissor/blob/master/image/lena_on_chassis.jpg)
 
