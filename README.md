@@ -69,4 +69,4 @@ We also needs to handle the user interface well for finishing this project. Ther
 We bring our most fashionable lady on to our most fashionable chassis.
 ![Lena on chassis](https://github.com/Beck-Sisyphus/intelligent_scissor/blob/master/image/lena_on_chassis.jpg)
 
-<img src="https://github.com/Beck-Sisyphus/intelligent_scissor/blob/master/image/lena_on_chassis.jpg" width="540" height="613"
+<img src="https://github.com/Beck-Sisyphus/intelligent_scissor/blob/master/image/lena_on_chassis.jpg" width="540" height="613">
