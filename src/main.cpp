@@ -461,16 +461,31 @@ int import_images(String directory)
 
 int main(int argc, char **argv)
 {
-    import_images(image_logo_directory);
+    import_images(image_avatar_directory);
+
+    // Create a window
+    namedWindow("Display window", WINDOW_AUTOSIZE);
+
+    // show the image
+    imshow("Display window", image_original);
 
     image_src = image_original.clone();
 
 #ifdef ENABLE_BLUR
-    GaussianBlur( image_original, image_src, Size( 7, 7 ), 0, 0 );
+//    boxFilter( image_original, image_src, -1, cv::Size(16, 16));
 #endif
+
+    // Create a window
+    namedWindow("blurred window", WINDOW_AUTOSIZE);
+
+    // show the image
+    imshow("blurred window", image_original);
+
     int coordinate[2];
     coordinate[0] = image_src.rows;
     coordinate[1] = image_src.cols;
+
+//    plot_pixel_node(coordinate[0], coordinate[1], &image_src);
 
     // set the callback function for any mouse event
     setMouseCallback(plot_window_name, mouse_callback, coordinate);

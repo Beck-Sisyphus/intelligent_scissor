@@ -14,6 +14,8 @@ using namespace cv;
 
 int plot_cost_graph(cv::Mat* image_gradient);
 
+int plot_pixel_node(int rows, int cols, Mat* image_src);
+
 int plot_path_tree(int rows, int cols, vector<Pixel_Node*> *graph);
 
 int plot_path_tree_point_to_point(cv::Point* seed, cv::Point* dest, vector<Pixel_Node*> *graph, cv::Mat* image_plot);
